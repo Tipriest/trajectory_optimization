@@ -72,6 +72,6 @@ public:
   Eigen::MatrixXd m_bezier_coeff;
   VectorXd m_seg_time;
   quadrotor_msgs::PolynomialTrajectory m_bezier_traj;
-  geometry_msgs::PoseArray m_bezier_traj_vis;
+  visualization_msgs::Marker m_bezier_traj_vis;
   ros::Publisher m_bezier_traj_vis_pub;
 };

@@ -7,7 +7,7 @@ TestClass3D::TestClass3D(ros::NodeHandle &h) {
   m_poly_traj_vis_pub =
       h.advertise<visualization_msgs::Marker>("trajectory_vis", 1);
   m_bezier_traj_vis_pub =
-      h.advertise<geometry_msgs::Pose>("bezier_traj_vis_pub", 1);
+      h.advertise<visualization_msgs::Marker>("bezier_traj_vis", 1);
 
   m_bernstein.setParam(3, 12, 3);
   m_MQM = m_bernstein.getMQM()[m_traj_order];
@@ -277,22 +277,34 @@ void TestClass3D::visBezierTrajectory() {
   Eigen::Vector3d cur, pre;
   cur.setZero();
   pre.setZero();
+  m_bezier_traj_vis.header.frame_id = "world"; // 设置坐标系
+  m_bezier_traj_vis.header.stamp = ros::Time::now();
+  m_bezier_traj_vis.ns = "trajectory_optj";
+  m_bezier_traj_vis.id = 0;
+  m_bezier_traj_vis.type = visualization_msgs::Marker::POINTS;
+  m_bezier_traj_vis.action = visualization_msgs::Marker::ADD;
+  m_bezier_traj_vis.scale.x = 1.5;
+  m_bezier_traj_vis.scale.y = 1.5;
+  m_bezier_traj_vis.scale.z = 1.5;
+  m_bezier_traj_vis.color.a = 1.0;
+  m_bezier_traj_vis.color.r = 1.0;
+  m_bezier_traj_vis.color.g = 0.2;
+  m_bezier_traj_vis.color.b = 0.2;
 
   Eigen::Vector3d state;
 
   // 定义轨迹点
-  geometry_msgs::Pose traj_point;
+  geometry_msgs::Point traj_point;
   int idx = 0;
   int segment_num = m_bezier_coeff.rows();
   for (int i = 0; i < segment_num; i++) {
     for (double t = 0.0; t < 1.0; t += 10 / m_seg_time(i), count += 1) {
       state = getPosFromBezier(t, i);
 
-      traj_point.orientation.w = 1.0;
-      cur(0) = traj_point.position.x = m_seg_time(i) * state(0);
-      cur(1) = traj_point.position.y = m_seg_time(i) * state(1);
-      cur(2) = traj_point.position.z = m_seg_time(i) * state(2);
-      m_bezier_traj_vis.poses.push_back(traj_point);
+      cur(0) = traj_point.x = m_seg_time(i) * state(0);
+      cur(1) = traj_point.y = m_seg_time(i) * state(1);
+      cur(2) = traj_point.z = m_seg_time(i) * state(2);
+      m_bezier_traj_vis.points.push_back(traj_point);
 
       if (count)
         traj_len += (pre - cur).norm();
@@ -303,8 +315,6 @@ void TestClass3D::visBezierTrajectory() {
   // std::cout << "begin!" << std::endl;
   // ros::Duration(5.0).sleep();
   m_bezier_traj_vis_pub.publish(m_bezier_traj_vis);
-  // m_bezier_traj_vis_pub.publish(m_bezier_traj_vis);
-  // m_bezier_traj_vis_pub.publish(m_bezier_traj_vis);
   // std::cout << "finish!" << std::endl;
   // ros::Duration(5.0).sleep();
 }
