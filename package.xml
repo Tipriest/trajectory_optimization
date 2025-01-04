@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>trajectory_optimization</name>
+  <version>0.0.1</version>
+  <description>The trajectory_optimization package</description>
+  <maintainer email="tipriests@gmail.com">fgaoaa</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>visualization_msgs</build_depend>
+  <build_depend>cv_bridge</build_depend>
+  <!-- <build_depend>arc_utilities</build_depend>
+  <build_depend>sdf_tools</build_depend> -->
+  <build_depend>message_generation</build_depend>
+
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>message_runtime</exec_depend>
+
+</package>

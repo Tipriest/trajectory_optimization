@@ -1,0 +1,9 @@
+<launch>
+  <node pkg="rviz"
+    type="rviz"
+    name="rviz"
+    output="screen"
+    args="-d $(find decomp_test_node)/launch/test.rviz"/>
+  <node pkg="trajectory_optimization" type="trajectory_optimization" name="trajectory_optimization" output="screen" launch-prefix="xterm -e gdb -ex run --args ">
+  </node>
+</launch>

@@ -1,0 +1,5 @@
+<launch>
+  <group>
+    <node pkg="trajectory_optimization" type="trajectory_optimization" name="trajectory_optimization" output="screen" />
+  </group>
+</launch>
