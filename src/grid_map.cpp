@@ -9,7 +9,7 @@ GridMapGenerator::GridMapGenerator(const ros::NodeHandle &nh)
   m_grid_map.setGeometry(grid_map::Length(m_length, m_width), m_resolution,
                          grid_map::Position(start_pos_x, start_pos_y));
   generateGridMap();
-  random_generate_obs(30, std::min(m_length, m_width) / 25,
+  random_generate_obs(20, std::min(m_length, m_width) / 25,
                       std::max(m_length, m_width) / 10);
   // 发布 GridMap
   m_map_publisher = nh_.advertise<grid_map_msgs::GridMap>("grid_map", 1);
@@ -57,11 +57,11 @@ void GridMapGenerator::random_generate_obs(int circle_num, double radius_min,
   std::mt19937 gen(rd()); // 使用梅森旋转算法（Mersenne Twister）生成随机数
   std::uniform_int_distribution<> dis(1, 1000); // 定义随机数范围为1到1000
   std::vector<grid_map::Position> centers;
-  auto tooclose = [centers, radius_max](grid_map::Position cur_center) -> bool {
+  auto tooclose = [&centers, radius_max](grid_map::Position cur_center) -> bool {
     for (auto center : centers) {
       double dis = sqrt(pow(center.x() - cur_center.x(), 2) +
                         pow(center.y() - cur_center.y(), 2));
-      if (dis < radius_max) {
+      if (dis < 1.5 * radius_max) {
         return true;
       }
     }
@@ -78,9 +78,9 @@ void GridMapGenerator::random_generate_obs(int circle_num, double radius_min,
       i--;
       continue;
     }
+    centers.push_back(cur_center);
     // 决定是什么形状，可选项有circle
-    // int seed = dis(gen);
-    int seed = 615;
+    int seed = dis(gen);
     if (seed < 300) {
       for (grid_map::CircleIterator iterator(m_grid_map, cur_center, radius);
            !iterator.isPastEnd(); ++iterator) {
@@ -99,7 +99,7 @@ void GridMapGenerator::random_generate_obs(int circle_num, double radius_min,
            !iterator.isPastEnd(); ++iterator) {
         m_grid_map.at("elevation", *iterator) = 1.5;
       }
-    } else if (600 <= seed && seed < 700) {
+    } else if (600 <= seed && seed < 650) {
       double theta = 2 * M_PI * dis(gen) / 1000.0;
       grid_map::Position start(cur_center.x() + radius * cos(theta),
                                cur_center.y() + radius * sin(theta));
@@ -109,7 +109,7 @@ void GridMapGenerator::random_generate_obs(int circle_num, double radius_min,
            !iterator.isPastEnd(); ++iterator) {
         m_grid_map.at("elevation", *iterator) = 1.5;
       }
-    } else if (700 <= seed && seed <= 1000) {
+    } else if (650 <= seed && seed <= 1000) {
       int polygon_num = dis(gen) % 4 + 3;
       double theta_per = 2 * M_PI / polygon_num;
       grid_map::Polygon polygon;
