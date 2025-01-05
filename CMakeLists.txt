@@ -15,6 +15,10 @@ find_package(catkin REQUIRED COMPONENTS
     geometry_msgs
     visualization_msgs
     quadrotor_msgs
+    grid_map_core
+    grid_map_ros
+    grid_map_rviz_plugin
+    grid_map_msgs
     tf
 )
 find_package(Eigen3 REQUIRED)
@@ -22,6 +26,7 @@ find_package(PCL REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
+  CATKIN_DEPENDS roscpp grid_map_core grid_map_ros grid_map_msgs geometry_msgs
 )
 
 link_directories(${PROJECT_SOURCE_DIR}/third_party/mosek/lib/mosek8_1)
@@ -36,15 +41,16 @@ include_directories(
     # ${DECOMP_UTIL_INCLUDE_DIRS}
     ${PCL_INCLUDE_DIRS}
 )
-
+message("!!!catkin_INCLUDE_DIRS is  ${catkin_INCLUDE_DIRS}")
 
 # add_compile_options(-mno-avx)
 
 add_executable(trajectory_optimization
     src/main.cpp
-    src/test_class.cpp
-    src/trajectory_generator.cpp
+    src/traj_optimize3d.cpp
+    src/bezier_generator3d.cpp
     src/bezier_base.cpp
+    src/grid_map.cpp
 )
 target_link_libraries(trajectory_optimization ${catkin_LIBRARIES} ${PCL_LIBRARIES} mosek64)
 

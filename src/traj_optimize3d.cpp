@@ -1,5 +1,5 @@
-#include "test_class.h"
-TestClass3D::TestClass3D(ros::NodeHandle &h) {
+#include "traj_optimize3d.h"
+TrajOptimize3D::TrajOptimize3D(ros::NodeHandle &h) {
   m_cubes_vis_pub =
       h.advertise<visualization_msgs::MarkerArray>("corridor_vis", 1);
   m_waypoints_vis_pub =
@@ -17,16 +17,16 @@ TestClass3D::TestClass3D(ros::NodeHandle &h) {
   m_Ca = m_bernstein.getC_a()[m_traj_order];
   m_Cj = m_bernstein.getC_j()[m_traj_order];
 }
-void TestClass3D::addWayPoint(const Eigen::Vector3d &waypoint) {
+void TrajOptimize3D::addWayPoint(const Eigen::Vector3d &waypoint) {
   m_waypoints.push_back(waypoint);
 }
-void TestClass3D::addWayPoints(const vector<Eigen::Vector3d> &waypoints) {
+void TrajOptimize3D::addWayPoints(const vector<Eigen::Vector3d> &waypoints) {
   for (Eigen::Vector3d waypoint : waypoints) {
     m_waypoints.push_back(waypoint);
   }
 }
 
-void TestClass3D::expandCubeFromWp() {
+void TrajOptimize3D::expandCubeFromWp() {
   m_cubes.clear();
   for (size_t i = 0; i < m_waypoints.size(); i++) {
     Eigen::Vector3d center = m_waypoints[i];
@@ -34,13 +34,13 @@ void TestClass3D::expandCubeFromWp() {
   }
 }
 
-void TestClass3D::timeAllocation() {
+void TrajOptimize3D::timeAllocation() {
   for (size_t i = 0; i < m_cubes.size(); i++) {
     m_cubes[i].m_t = 100;
   }
 }
 
-void TestClass3D::solveTrajectory() {
+void TrajOptimize3D::solveTrajectory() {
   Eigen::MatrixXd pos = MatrixXd::Zero(2, 3);
   Eigen::MatrixXd vel = MatrixXd::Zero(2, 3);
   Eigen::MatrixXd acc = MatrixXd::Zero(2, 3);
@@ -74,7 +74,7 @@ void TestClass3D::solveTrajectory() {
            (time_aft_opt - time_bef_opt).toSec());
 }
 
-void TestClass3D::getBezierTraj() {
+void TrajOptimize3D::getBezierTraj() {
   m_bezier_traj.num_segment = m_seg_num;
 
   int poly_num1d = m_traj_order + 1;
@@ -109,7 +109,7 @@ void TestClass3D::getBezierTraj() {
   m_bezier_traj.start_yaw = 0.0;
   m_bezier_traj.final_yaw = 0.0;
 }
-Eigen::Vector3d TestClass3D::getPosFromBezier(double t_now, int seg_now) {
+Eigen::Vector3d TrajOptimize3D::getPosFromBezier(double t_now, int seg_now) {
   Eigen::Vector3d ret = VectorXd::Zero(3);
   VectorXd ctrl_now = m_bezier_coeff.row(seg_now);
   int ctrl_num1D = m_bezier_coeff.cols() / 3;
@@ -121,7 +121,7 @@ Eigen::Vector3d TestClass3D::getPosFromBezier(double t_now, int seg_now) {
 
   return ret;
 }
-void TestClass3D::vis(bool wp, bool corridor, bool traj) {
+void TrajOptimize3D::vis(bool wp, bool corridor, bool traj) {
   if (wp) {
     visWayPoints();
   }
@@ -133,7 +133,7 @@ void TestClass3D::vis(bool wp, bool corridor, bool traj) {
     visBezierTrajectory();
   }
 }
-void TestClass3D::visWayPoints() {
+void TrajOptimize3D::visWayPoints() {
   // 删掉原来残留的waypoints
   for (auto &mk : m_waypoints_vis.markers)
     mk.action = visualization_msgs::Marker::DELETE;
@@ -178,7 +178,7 @@ void TestClass3D::visWayPoints() {
 
   m_waypoints_vis_pub.publish(m_waypoints_vis);
 }
-void TestClass3D::visCorridor() {
+void TrajOptimize3D::visCorridor() {
   // 删掉原来残留的cubes
   for (auto &mk : m_cube_vis.markers)
     mk.action = visualization_msgs::Marker::DELETE;
@@ -225,7 +225,7 @@ void TestClass3D::visCorridor() {
 
   m_cubes_vis_pub.publish(m_cube_vis);
 }
-void TestClass3D::visTraj() {
+void TrajOptimize3D::visTraj() {
   visualization_msgs::Marker traj_vis;
   traj_vis.header.stamp = ros::Time::now();
   traj_vis.header.frame_id = "world";
@@ -270,7 +270,7 @@ void TestClass3D::visTraj() {
  * @param[in] time          My Param doc
  * @author Tipriest (a1503741059@163.com)
  */
-void TestClass3D::visBezierTrajectory() {
+void TrajOptimize3D::visBezierTrajectory() {
 
   double traj_len = 0.0;
   int count = 0;
@@ -298,7 +298,7 @@ void TestClass3D::visBezierTrajectory() {
   int idx = 0;
   int segment_num = m_bezier_coeff.rows();
   for (int i = 0; i < segment_num; i++) {
-    for (double t = 0.0; t < 1.0; t += 10 / m_seg_time(i), count += 1) {
+    for (double t = 0.0; t < 1.0; t += 1.0 / m_seg_time(i), count += 1) {
       state = getPosFromBezier(t, i);
 
       cur(0) = traj_point.x = m_seg_time(i) * state(0);

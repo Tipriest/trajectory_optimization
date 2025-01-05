@@ -12,7 +12,7 @@
 #include "nav_msgs/Odometry.h"
 #include "tf/tf.h"
 #include "tf/transform_datatypes.h"
-#include "trajectory_generator.h"
+#include "bezier_generator3d.h"
 #include "visualization_msgs/Marker.h"
 #include "visualization_msgs/MarkerArray.h"
 
@@ -20,7 +20,6 @@
 #include "data_type.h"
 #include "geometry_msgs/PoseArray.h"
 #include "quadrotor_msgs/PolynomialTrajectory.h"
-#include "trajectory_generator.h"
 // class TestClass2D {
 // public:
 //   TestClass(ros::NodeHandle &h) {}
@@ -31,9 +30,9 @@
 
 // }
 // using namespace Eigen;
-class TestClass3D {
+class TrajOptimize3D {
 public:
-  TestClass3D(ros::NodeHandle &h);
+  TrajOptimize3D(ros::NodeHandle &h);
   void addWayPoint(const Eigen::Vector3d &waypoint);
   void addWayPoints(const vector<Eigen::Vector3d> &waypoints);
   void expandCubeFromWp();

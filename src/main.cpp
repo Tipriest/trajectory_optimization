@@ -1,14 +1,18 @@
 #include "backward.hpp"
-#include "test_class.h"
+#include "grid_map.h"
+#include "traj_optimize3d.h"
 namespace backward {
-
 backward::SignalHandling sh;
-
 }
+
 int main(int argc, char **argv) {
   ros::init(argc, argv, "test");
   ros::NodeHandle nh("~");
-  TestClass3D testcase(nh);
+  // 创建 GridMapGenerator 对象
+  GridMapGenerator grid_map_generator(nh);
+  // grid_map_generator.generateAndPublishMap();
+
+  TrajOptimize3D testcase(nh);
   Eigen::Vector3d point1, point2, point3, point4, point5;
   std::vector<Eigen::Vector3d> waypoints = {Eigen::Vector3d(50, 50, 0),   //
                                             Eigen::Vector3d(100, 120, 0), //
