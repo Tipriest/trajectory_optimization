@@ -2,9 +2,9 @@
 using namespace std;
 using namespace Eigen;
 
-static void MSKAPI printstr(void *handle, MSKCONST char str[]) {
-  printf("%s", str);
-}
+// static void MSKAPI printstr(void *handle, MSKCONST char str[]) {
+//   printf("%s", str);
+// }
 
 int BezierPloyCoeffGeneration3D(
     const vector<Cube> &corridor, const MatrixXd &MQM, const MatrixXd &pos,
@@ -461,7 +461,7 @@ int BezierPloyCoeffGeneration3D(
     }
   }
 
-  ros::Time time_end1 = ros::Time::now();
+  // ros::Time time_end1 = ros::Time::now();
 
   if (r == MSK_RES_OK)
     r = MSK_putqobj(task, NUMQNZ, qsubi, qsubj, qval);
@@ -529,9 +529,9 @@ int BezierPloyCoeffGeneration3D(
   MSK_deletetask(&task);
   MSK_deleteenv(&env);
 
-  ros::Time time_end2 = ros::Time::now();
-  ROS_WARN("time consume in optimize is :");
-  cout << time_end2 - time_end1 << endl;
+  // ros::Time time_end2 = ros::Time::now();
+  // ROS_WARN("time consume in optimize is :");
+  // cout << time_end2 - time_end1 << endl;
 
   if (!solve_ok) {
     ROS_WARN("In solver, falied ");

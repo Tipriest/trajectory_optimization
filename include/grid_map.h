@@ -8,10 +8,33 @@
 #include <grid_map_ros/grid_map_ros.hpp>
 #include <random>
 #include <ros/ros.h>
+#include <string>
 
 class GridMapGenerator {
 public:
-  GridMapGenerator(const ros::NodeHandle &nh);
+  GridMapGenerator(const ros::NodeHandle &nh,
+                   std::shared_ptr<grid_map::GridMap> global_map_ptr);
+
+  double m_length = 40.0;
+  double m_width = 40.0;
+  double m_resolution = 0.1;
+  grid_map::GridMap m_grid_map;
+  double start_pos_x = 0.0;
+  double start_pos_y = 0.0;
+  double leftdown_offset_x = start_pos_x - m_length / 2;
+  double leftdown_offset_y = start_pos_y - m_width / 2;
+
+  double getOccupancy(double x, double y, std::string layer = "elevation");
+
+private:
+  ros::NodeHandle nh_;
+  ros::Publisher m_map_publisher;
+  std::vector<geometry_msgs::Polygon> m_polygons;
+  std::shared_ptr<grid_map::GridMap> m_grid_map_ptr;
+  ros::Timer m_map_publish_timer;
+
+  bool isPointInPolygon(double x, double y);
+  void createPolygonExample();
   void generateGridMap();
   void publishGridMap();
   void generateAndPublishMap();
@@ -20,21 +43,4 @@ public:
       std::vector<std::vector<geometry_msgs::Point32>> polygon_points);
   void random_generate_obs(int circle_num, double radius_min,
                            double radius_max);
-
-private:
-  ros::NodeHandle nh_;
-
-  double m_length = 40.0;
-  double m_width = 40.0;
-  double m_resolution = 0.1;
-  double start_pos_x = 0.0;
-  double start_pos_y = 0.0;
-
-  ros::Publisher m_map_publisher;
-  std::vector<geometry_msgs::Polygon> m_polygons;
-  grid_map::GridMap m_grid_map;
-  ros::Timer m_map_publish_timer;
-
-  bool isPointInPolygon(double x, double y);
-  void createPolygonExample();
 };

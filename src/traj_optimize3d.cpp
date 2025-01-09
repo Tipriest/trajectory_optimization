@@ -57,7 +57,7 @@ void TrajOptimize3D::solveTrajectory() {
              "the mosek solver");
     return;
   } else {
-    ROS_WARN("successfully generate the optimal path");
+    // ROS_WARN("successfully generate the optimal path");
   }
 
   m_seg_num = m_cubes.size();
@@ -69,9 +69,9 @@ void TrajOptimize3D::solveTrajectory() {
   // visBezierTrajectory();
   // visTraj();
   ros::Time time_aft_opt = ros::Time::now();
-  ROS_WARN("The objective of the program is %f", obj);
-  ROS_WARN("The time consumation of the program is %f",
-           (time_aft_opt - time_bef_opt).toSec());
+  // ROS_WARN("The objective of the program is %f", obj);
+  // ROS_WARN("The time consumation of the program is %f",
+  //          (time_aft_opt - time_bef_opt).toSec());
 }
 
 void TrajOptimize3D::getBezierTraj() {
@@ -165,7 +165,7 @@ void TrajOptimize3D::visWayPoints() {
   mk.scale.z = 2.5;
 
   int idx = 0;
-  for (int i = 0; i < int(m_waypoints.size()); i++) {
+  for (size_t i = 0; i < m_waypoints.size(); i++) {
     mk.id = idx;
 
     mk.pose.position.x = m_waypoints[i](0);
@@ -317,4 +317,4 @@ void TrajOptimize3D::visBezierTrajectory() {
   m_bezier_traj_vis_pub.publish(m_bezier_traj_vis);
   // std::cout << "finish!" << std::endl;
   // ros::Duration(5.0).sleep();
-}
+} 

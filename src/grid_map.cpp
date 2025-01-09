@@ -2,12 +2,18 @@
 
 using namespace grid_map;
 
-GridMapGenerator::GridMapGenerator(const ros::NodeHandle &nh)
-    : nh_(nh), m_grid_map({"elevation"}) {
+GridMapGenerator::GridMapGenerator(
+    const ros::NodeHandle &nh,
+    std::shared_ptr<grid_map::GridMap> global_map_ptr)
+    : nh_(nh), m_grid_map_ptr(global_map_ptr) {
+
   // 初始化 GridMap
+  m_grid_map = *m_grid_map_ptr;
+
   m_grid_map.setFrameId("world");
   m_grid_map.setGeometry(grid_map::Length(m_length, m_width), m_resolution,
                          grid_map::Position(start_pos_x, start_pos_y));
+
   generateGridMap();
   random_generate_obs(20, std::min(m_length, m_width) / 25,
                       std::max(m_length, m_width) / 10);
@@ -57,7 +63,8 @@ void GridMapGenerator::random_generate_obs(int circle_num, double radius_min,
   std::mt19937 gen(rd()); // 使用梅森旋转算法（Mersenne Twister）生成随机数
   std::uniform_int_distribution<> dis(1, 1000); // 定义随机数范围为1到1000
   std::vector<grid_map::Position> centers;
-  auto tooclose = [&centers, radius_max](grid_map::Position cur_center) -> bool {
+  auto tooclose = [&centers,
+                   radius_max](grid_map::Position cur_center) -> bool {
     for (auto center : centers) {
       double dis = sqrt(pow(center.x() - cur_center.x(), 2) +
                         pow(center.y() - cur_center.y(), 2));
@@ -155,9 +162,9 @@ void GridMapGenerator::createPolygonExample() {
 }
 void GridMapGenerator::createPolygons(
     std::vector<std::vector<geometry_msgs::Point32>> polygon_points) {
-  for (int i = 0; i < polygon_points.size(); i++) {
+  for (size_t i = 0; i < polygon_points.size(); i++) {
     geometry_msgs::Polygon polygon;
-    for (int j = 0; j < polygon_points[i].size(); j++) {
+    for (size_t j = 0; j < polygon_points[i].size(); j++) {
       polygon.points.push_back(polygon_points[i][j]);
     }
     m_polygons.push_back(polygon);
@@ -172,12 +179,6 @@ void GridMapGenerator::generateGridMap() {
     // m_grid_map.getPosition(*it, position);
 
     m_grid_map.at("elevation", *it) = 0.0; // 区域外高度为 0
-
-    // if (isPointInPolygon(x, y)) {
-    //   m_grid_map.at("elevation", *it) = 1.5; // 区域内高度为 5
-    // } else {
-    //   m_grid_map.at("elevation", *it) = 0.0; // 区域外高度为 0
-    // }
   }
 }
 
@@ -194,4 +195,11 @@ void GridMapGenerator::generateAndPublishMap() {
 
 void GridMapGenerator::mapPubTimerCB(const ros::TimerEvent &e) {
   publishGridMap();
+}
+
+double GridMapGenerator::getOccupancy(double x, double y, std::string layer) {
+  grid_map::Position position(x, y);
+  grid_map::InterpolationMethods interpolation_methos =
+      InterpolationMethods::INTER_LINEAR;
+  return m_grid_map.atPosition(layer, position, interpolation_methos);
 }

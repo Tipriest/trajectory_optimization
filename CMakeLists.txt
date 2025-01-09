@@ -51,6 +51,7 @@ add_executable(trajectory_optimization
     src/bezier_generator3d.cpp
     src/bezier_base.cpp
     src/grid_map.cpp
+    src/traj_search3d.cpp
 )
 target_link_libraries(trajectory_optimization ${catkin_LIBRARIES} ${PCL_LIBRARIES} mosek64)
 
