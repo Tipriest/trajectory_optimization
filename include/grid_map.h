@@ -25,6 +25,8 @@ public:
   double leftdown_offset_y = start_pos_y - m_width / 2;
 
   double getOccupancy(double x, double y, std::string layer = "elevation");
+  void publishGridMap();
+  void generate_dynamic_object();
 
 private:
   ros::NodeHandle nh_;
@@ -32,15 +34,16 @@ private:
   std::vector<geometry_msgs::Polygon> m_polygons;
   std::shared_ptr<grid_map::GridMap> m_grid_map_ptr;
   ros::Timer m_map_publish_timer;
+  ros::Timer m_dynamic_object_timer;
 
   bool isPointInPolygon(double x, double y);
   void createPolygonExample();
   void generateGridMap();
-  void publishGridMap();
   void generateAndPublishMap();
   void mapPubTimerCB(const ros::TimerEvent &e);
   void createPolygons(
       std::vector<std::vector<geometry_msgs::Point32>> polygon_points);
   void random_generate_obs(int circle_num, double radius_min,
                            double radius_max);
+  
 };

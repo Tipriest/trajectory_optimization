@@ -7,7 +7,7 @@
 #include <ros/console.h>
 #include <ros/ros.h>
 
-class gridPathFinder {
+class GridPathFinder {
 private:
   Eigen::Vector3d gridIndex2coord(Eigen::Vector3i index);
   Eigen::Vector3i coord2gridIndex(Eigen::Vector3d pt);
@@ -36,8 +36,8 @@ private:
       1.0 + 1.0 / 10000; //设置算法倾向性，避免启发式函数效果接近的问题
 
 public:
-  gridPathFinder(std::shared_ptr<GridMapGenerator> gridmap_generator);
-  ~gridPathFinder(){};
+  GridPathFinder(std::shared_ptr<GridMapGenerator> gridmap_generator);
+  ~GridPathFinder(){};
 
   void initGridNodeMap();
   // void linkLocalMap(sdf_tools::CollisionMapGrid *local_map,

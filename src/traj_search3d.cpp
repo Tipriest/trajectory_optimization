@@ -10,7 +10,7 @@ using namespace Eigen;
 // 因此选择将全局的地图都进行更新,但是在实车上使用的时候应该使用的是linkLocalMap
 
 // 然后这个里面保留一个grid_map的指针用来执行更新
-gridPathFinder::gridPathFinder(
+GridPathFinder::GridPathFinder(
     std::shared_ptr<GridMapGenerator> gridmap_generator)
     : m_grid_map_genertaor_ptr(gridmap_generator) {
   m_grid_map = m_grid_map_genertaor_ptr->m_grid_map;
@@ -25,7 +25,7 @@ gridPathFinder::gridPathFinder(
 
   initGridNodeMap();
 }
-void gridPathFinder::initGridNodeMap() {
+void GridPathFinder::initGridNodeMap() {
   GridNodeMap = new GridNodePtr **[m_GLX_SIZE];
   for (int i = 0; i < m_GLX_SIZE; i++) {
     GridNodeMap[i] = new GridNodePtr *[m_GLY_SIZE];
@@ -42,7 +42,7 @@ void gridPathFinder::initGridNodeMap() {
   }
 }
 
-// void gridPathFinder::linkLocalMap(std::shared_ptr<grid_map::GridMap>
+// void GridPathFinder::linkLocalMap(std::shared_ptr<grid_map::GridMap>
 // local_map,
 //                                   Vector3d xyz_l) {
 //   Vector3d coord;
@@ -68,7 +68,7 @@ void gridPathFinder::initGridNodeMap() {
 //   }
 // }
 
-void gridPathFinder::resetLocalMap() {
+void GridPathFinder::resetLocalMap() {
   // ROS_WARN("expandedNodes size : %d", expandedNodes.size());
   for (auto tmpPtr : expandedNodes) {
     tmpPtr->occupancy = 0; // forget the occupancy
@@ -91,7 +91,7 @@ void gridPathFinder::resetLocalMap() {
   // ROS_WARN("local map reset finish");
 }
 
-void gridPathFinder::resetGlobalMap() {
+void GridPathFinder::resetGlobalMap() {
   // ROS_WARN("expandedNodes size : %d", expandedNodes.size());
   for (auto tmpPtr : expandedNodes) {
     tmpPtr->occupancy = 0; // forget the occupancy
@@ -111,17 +111,28 @@ void gridPathFinder::resetGlobalMap() {
   }
 
   expandedNodes.clear();
-  initGridNodeMap();
+
+  for (int i = 0; i < m_GLX_SIZE; i++) {
+    for (int j = 0; j < m_GLY_SIZE; j++) {
+      for (int k = 0; k < m_GLZ_SIZE; k++) {
+        Vector3i tmpIdx(i, j, k);
+        Vector3d pos = gridIndex2coord(tmpIdx);
+        GridNodeMap[i][j][k]->occupancy =
+            m_grid_map_genertaor_ptr->getOccupancy(pos(0), pos(1));
+      }
+    }
+  }
+
   // ROS_WARN("local map reset finish");
 }
-GridNodePtr gridPathFinder::pos2gridNodePtr(Vector3d pos) {
+GridNodePtr GridPathFinder::pos2gridNodePtr(Vector3d pos) {
   Vector3i idx = coord2gridIndex(pos);
   GridNodePtr grid_ptr = new GridNode(idx, pos);
 
   return grid_ptr;
 }
 
-Vector3d gridPathFinder::gridIndex2coord(Vector3i index) {
+Vector3d GridPathFinder::gridIndex2coord(Vector3i index) {
   Vector3d pt;
   // cell_x_size_ * ((double)x_index + 0.5), cell_y_size_ * ((double)y_index +
   // 0.5), cell_z_size_ * ((double)z_index + 0.5)
@@ -136,7 +147,7 @@ Vector3d gridPathFinder::gridIndex2coord(Vector3i index) {
   return pt;
 }
 
-Vector3i gridPathFinder::coord2gridIndex(Vector3d pt) {
+Vector3i GridPathFinder::coord2gridIndex(Vector3d pt) {
   Vector3i idx;
   idx << min(max(int((pt(0) - m_gl_xl) * m_inv_resolution), 0), m_GLX_SIZE - 1),
       min(max(int((pt(1) - m_gl_yl) * m_inv_resolution), 0), m_GLY_SIZE - 1),
@@ -145,7 +156,7 @@ Vector3i gridPathFinder::coord2gridIndex(Vector3d pt) {
   return idx;
 }
 
-double gridPathFinder::getDiagHeu(GridNodePtr node1, GridNodePtr node2) {
+double GridPathFinder::getDiagHeu(GridNodePtr node1, GridNodePtr node2) {
   double dx = abs(node1->index(0) - node2->index(0));
   double dy = abs(node1->index(1) - node2->index(1));
   double dz = abs(node1->index(2) - node2->index(2));
@@ -168,7 +179,7 @@ double gridPathFinder::getDiagHeu(GridNodePtr node1, GridNodePtr node2) {
   return h;
 }
 
-double gridPathFinder::getManhHeu(GridNodePtr node1, GridNodePtr node2) {
+double GridPathFinder::getManhHeu(GridNodePtr node1, GridNodePtr node2) {
   double dx = abs(node1->index(0) - node2->index(0));
   double dy = abs(node1->index(1) - node2->index(1));
   double dz = abs(node1->index(2) - node2->index(2));
@@ -176,16 +187,16 @@ double gridPathFinder::getManhHeu(GridNodePtr node1, GridNodePtr node2) {
   return dx + dy + dz;
 }
 
-double gridPathFinder::getEuclHeu(GridNodePtr node1, GridNodePtr node2) {
+double GridPathFinder::getEuclHeu(GridNodePtr node1, GridNodePtr node2) {
   return (node2->index - node1->index).norm();
 }
 
-double gridPathFinder::getHeu(GridNodePtr node1, GridNodePtr node2) {
+double GridPathFinder::getHeu(GridNodePtr node1, GridNodePtr node2) {
   return m_tie_breaker * getDiagHeu(node1, node2);
   // return m_tie_breaker * getEuclHeu(node1, node2);
 }
 
-vector<GridNodePtr> gridPathFinder::retrievePath(GridNodePtr current) {
+vector<GridNodePtr> GridPathFinder::retrievePath(GridNodePtr current) {
   vector<GridNodePtr> path;
   path.push_back(current);
 
@@ -197,7 +208,7 @@ vector<GridNodePtr> gridPathFinder::retrievePath(GridNodePtr current) {
   return path;
 }
 
-vector<GridNodePtr> gridPathFinder::getVisitedNodes() {
+vector<GridNodePtr> GridPathFinder::getVisitedNodes() {
   vector<GridNodePtr> visited_nodes;
   for (int i = 0; i < m_GLX_SIZE; i++)
     for (int j = 0; j < m_GLY_SIZE; j++)
@@ -211,12 +222,12 @@ vector<GridNodePtr> gridPathFinder::getVisitedNodes() {
   return visited_nodes;
 }
 
-/*bool gridPathFinder::minClearance()
+/*bool GridPathFinder::minClearance()
 {
     neighborPtr->occupancy > 0.5
 }
 */
-void gridPathFinder::AstarSearch(Eigen::Vector3d start_pt,
+void GridPathFinder::AstarSearch(Eigen::Vector3d start_pt,
                                  Eigen::Vector3d end_pt) {
   // ros::Time   = ros::Time::now();
   GridNodePtr startPtr = pos2gridNodePtr(start_pt);
@@ -246,9 +257,9 @@ void gridPathFinder::AstarSearch(Eigen::Vector3d start_pt,
         current->index(2) == endPtr->index(2)) {
       // ROS_WARN("[Astar]Reach goal..");
       // cout << "goal coord: " << endl << current->real_coord << endl;
-      // cout << "total number of iteration used in Astar: " << num_iter << endl;
-      // ros::Time time_2 = ros::Time::now();
-      // ROS_WARN("Time consume in A star path finding is %f",
+      // cout << "total number of iteration used in Astar: " << num_iter <<
+      // endl; ros::Time time_2 = ros::Time::now(); ROS_WARN("Time consume in A
+      // star path finding is %f",
       //          (time_2 - time_1).toSec());
       gridPath = retrievePath(current);
       return;
@@ -323,7 +334,7 @@ void gridPathFinder::AstarSearch(Eigen::Vector3d start_pt,
   //          (time_2 - time_1).toSec());
 }
 
-vector<Vector3d> gridPathFinder::getPath() {
+vector<Vector3d> GridPathFinder::getPath() {
   vector<Vector3d> path;
 
   for (auto ptr : gridPath)
@@ -333,4 +344,4 @@ vector<Vector3d> gridPathFinder::getPath() {
   return path;
 }
 
-void gridPathFinder::resetPath() { gridPath.clear(); }
+void GridPathFinder::resetPath() { gridPath.clear(); }

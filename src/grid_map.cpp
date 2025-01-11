@@ -19,10 +19,13 @@ GridMapGenerator::GridMapGenerator(
                       std::max(m_length, m_width) / 10);
   // 发布 GridMap
   m_map_publisher = nh_.advertise<grid_map_msgs::GridMap>("grid_map", 1);
-  m_map_publish_timer =
-      nh_.createTimer(ros::Duration(1.0),
-                      boost::bind(&GridMapGenerator::mapPubTimerCB, this, _1));
-  m_map_publish_timer.start();
+  // m_map_publish_timer =
+  //     nh_.createTimer(ros::Duration(0.5),
+  //                     boost::bind(&GridMapGenerator::mapPubTimerCB, this, _1));
+  // m_map_publish_timer.start();
+  // m_dynamic_object_timer = nh_.createTimer(
+  //     ros::Duration(0.01), GridMapGenerator::generate_dynamic_object);
+  // m_dynamic_object_timer.start();
 }
 
 bool GridMapGenerator::isPointInPolygon(double x, double y) {
@@ -178,7 +181,8 @@ void GridMapGenerator::generateGridMap() {
     // Position position;
     // m_grid_map.getPosition(*it, position);
 
-    m_grid_map.at("elevation", *it) = 0.0; // 区域外高度为 0
+    m_grid_map.at("elevation", *it) = 0.0;        // 区域外高度为 0
+    m_grid_map.at("dynamic_obstacle", *it) = 0.0; // 区域外高度为 0
   }
 }
 
@@ -199,7 +203,39 @@ void GridMapGenerator::mapPubTimerCB(const ros::TimerEvent &e) {
 
 double GridMapGenerator::getOccupancy(double x, double y, std::string layer) {
   grid_map::Position position(x, y);
-  grid_map::InterpolationMethods interpolation_methos =
+  grid_map::InterpolationMethods interpolation_methods =
       InterpolationMethods::INTER_LINEAR;
-  return m_grid_map.atPosition(layer, position, interpolation_methos);
+  if (m_grid_map.atPosition("elevation", position, interpolation_methods) > 1 ||
+      m_grid_map.atPosition("dynamic_obstacle", position,
+                            interpolation_methods) > 1.0) {
+    return 1;
+  }
+  return 0;
+}
+
+void GridMapGenerator::generate_dynamic_object() {
+  // 10s走一次
+  ros::Time time1 = ros::Time::now();
+  int total_steps = 1000;
+  static int count = 0;
+  static grid_map::Position last_center(0.0, 0.0);
+  grid_map::Position cur_center;
+  cur_center.x() =
+      (double)count / (double)total_steps * m_length - m_length / 2;
+  cur_center.y() = -10.0;
+  double radius = 2.0;
+  for (grid_map::CircleIterator iterator(m_grid_map, last_center, radius);
+       !iterator.isPastEnd(); ++iterator) {
+    m_grid_map.at("dynamic_obstacle", *iterator) = 0.0;
+  }
+  for (grid_map::CircleIterator iterator(m_grid_map, cur_center, radius);
+       !iterator.isPastEnd(); ++iterator) {
+    m_grid_map.at("dynamic_obstacle", *iterator) = 2.0;
+  }
+  count++;
+  count = count % total_steps;
+  ros::Time time2 = ros::Time::now();
+  // std::cout << "count = " << count << " " << (time2 - time1).toSec()
+  //           << std::endl;
+  last_center = cur_center;
 }
