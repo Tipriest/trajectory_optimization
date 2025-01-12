@@ -121,7 +121,8 @@ AstarSearcher::AstarSearcher(
     ros::NodeHandle nh, std::shared_ptr<GridMapGenerator> gridmap_generator)
     : m_grid_map_genertaor_ptr(gridmap_generator) {
   m_nh = nh;
-
+  start_point << 0.0, 0.0, 0.0;
+  end_point << 0.0, 0.0, 0.0;
   m_grid_map = m_grid_map_genertaor_ptr->m_grid_map;
   m_resolution = m_grid_map_genertaor_ptr->m_resolution;
   m_inv_resolution = 1.0 / m_resolution;
