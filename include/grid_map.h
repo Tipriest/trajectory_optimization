@@ -13,20 +13,22 @@
 class GridMapGenerator {
 public:
   GridMapGenerator(const ros::NodeHandle &nh,
-                   std::shared_ptr<grid_map::GridMap> global_map_ptr);
+                   std::shared_ptr<grid_map::GridMap> global_map_ptr,
+                   std::vector<std::string> layers);
 
-  double m_length = 40.0;
-  double m_width = 40.0;
+  double m_length = 20.0;
+  double m_width = 20.0;
   double m_resolution = 0.1;
+  double m_map_start_pos_x = 0.0;
+  double m_map_start_pos_y = 0.0;
+  double m_leftdown_offset_x = m_map_start_pos_x - m_length / 2;
+  double m_leftdown_offset_y = m_map_start_pos_y - m_width / 2;
+  std::vector<std::string> m_layers;
   grid_map::GridMap m_grid_map;
-  double start_pos_x = 0.0;
-  double start_pos_y = 0.0;
-  double leftdown_offset_x = start_pos_x - m_length / 2;
-  double leftdown_offset_y = start_pos_y - m_width / 2;
 
-  double getOccupancy(double x, double y, std::string layer = "elevation");
+  double getOccupancy(double x, double y, std::vector<std::string> layer);
   void publishGridMap();
-  void generate_dynamic_object();
+  void generate_dynamic_object(const ros::TimerEvent &e);
 
 private:
   ros::NodeHandle nh_;
@@ -45,5 +47,4 @@ private:
       std::vector<std::vector<geometry_msgs::Point32>> polygon_points);
   void random_generate_obs(int circle_num, double radius_min,
                            double radius_max);
-  
 };

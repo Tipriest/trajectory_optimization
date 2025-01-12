@@ -3,6 +3,113 @@
 using namespace std;
 using namespace Eigen;
 
+void PathSearcher::displayPath() {
+
+  removeDisplayPath();
+  m_path_vis.points.clear();
+
+  m_path_vis.header.frame_id = "world";
+  m_path_vis.header.stamp = ros::Time();
+  m_path_vis.ns = "trajectory_search";
+  m_path_vis.type = visualization_msgs::Marker::LINE_STRIP;
+  m_path_vis.action = visualization_msgs::Marker::ADD;
+
+  m_path_vis.pose.orientation.x = 0.0;
+  m_path_vis.pose.orientation.y = 0.0;
+  m_path_vis.pose.orientation.z = 0.0;
+  m_path_vis.pose.orientation.w = 1.0;
+
+  m_path_vis.color.a = 0.8;
+  m_path_vis.color.r = 0.6;
+  m_path_vis.color.g = 0.8;
+  m_path_vis.color.b = 0.2;
+
+  m_path_vis.scale.x = 0.2; // LINE_STRIP的形状只取决于scale.x
+
+  m_path_vis.id = 0;
+  std::vector<Eigen::Vector3d> path = getPath();
+  for (size_t i = 0; i < path.size(); i++) {
+    geometry_msgs::Point point;
+    point.x = path[i](0);
+    point.y = path[i](1);
+    point.z = path[i](2);
+    m_path_vis.points.push_back(point);
+  }
+
+  m_search_path_publisher.publish(m_path_vis);
+}
+
+void PathSearcher::removeDisplayPath() {
+
+  m_path_vis.points.clear();
+  m_path_vis.header.frame_id = "world";
+  m_path_vis.header.stamp = ros::Time();
+  m_path_vis.ns = "trajectory_search";
+  m_path_vis.type = visualization_msgs::Marker::LINE_STRIP;
+  m_path_vis.action = visualization_msgs::Marker::DELETE;
+
+  m_search_path_publisher.publish(m_path_vis);
+}
+
+void AstarSearcher::rcvPosCmdCallBack(const geometry_msgs::PoseStamped &cmd) {
+  static int update_time = 0;
+  static Eigen::Vector3d start_temp;
+  if (update_time == 0) {
+    start_temp(0) = cmd.pose.position.x;
+    start_temp(1) = cmd.pose.position.y;
+    start_temp(2) = cmd.pose.position.z;
+    update_time++;
+  } else if (update_time == 1) {
+    start_point(0) = start_temp(0);
+    start_point(1) = start_temp(1);
+    start_point(2) = start_temp(2);
+    end_point(0) = cmd.pose.position.x;
+    end_point(1) = cmd.pose.position.y;
+    end_point(2) = cmd.pose.position.z;
+    update_time = 0;
+
+    visualization_msgs::MarkerArray markerArray_vis;
+    for (auto &marker_vis : markerArray_vis.markers)
+      marker_vis.action = visualization_msgs::Marker::DELETE;
+
+    start_end_point_vis_publisher.publish(markerArray_vis);
+
+    markerArray_vis.markers.clear();
+    visualization_msgs::Marker marker_vis;
+    marker_vis.header.frame_id = "world";
+    marker_vis.header.stamp = ros::Time::now();
+    marker_vis.ns = "trajectory_search";
+    marker_vis.type = visualization_msgs::Marker::SPHERE;
+    marker_vis.action = visualization_msgs::Marker::ADD;
+    marker_vis.pose.orientation.x = 0.0;
+    marker_vis.pose.orientation.y = 0.0;
+    marker_vis.pose.orientation.z = 0.0;
+    marker_vis.pose.orientation.w = 1.0;
+    marker_vis.color.a = 1.0;
+    marker_vis.color.r = 0.0;
+    marker_vis.color.g = 1.0;
+    marker_vis.color.b = 0.0;
+    marker_vis.scale.x = 0.5;
+    marker_vis.scale.y = 0.5;
+    marker_vis.scale.z = 0.5;
+    marker_vis.id = 0;
+    marker_vis.pose.position.x = start_point(0);
+    marker_vis.pose.position.y = start_point(1);
+    marker_vis.pose.position.z = start_point(2);
+    markerArray_vis.markers.push_back(marker_vis);
+
+    marker_vis.id = 1;
+    marker_vis.color.a = 1.0;
+    marker_vis.color.r = 1.0;
+    marker_vis.color.g = 0.0;
+    marker_vis.color.b = 0.8;
+    marker_vis.pose.position.x = end_point(0);
+    marker_vis.pose.position.y = end_point(1);
+    marker_vis.pose.position.z = end_point(2);
+    markerArray_vis.markers.push_back(marker_vis);
+    start_end_point_vis_publisher.publish(markerArray_vis);
+  }
+}
 // 理论上的map的更新逻辑是一开始init的时候初始化一个全局的地图
 // 随后在局部地图进行初始化
 
@@ -10,22 +117,36 @@ using namespace Eigen;
 // 因此选择将全局的地图都进行更新,但是在实车上使用的时候应该使用的是linkLocalMap
 
 // 然后这个里面保留一个grid_map的指针用来执行更新
-GridPathFinder::GridPathFinder(
-    std::shared_ptr<GridMapGenerator> gridmap_generator)
+AstarSearcher::AstarSearcher(
+    ros::NodeHandle nh, std::shared_ptr<GridMapGenerator> gridmap_generator)
     : m_grid_map_genertaor_ptr(gridmap_generator) {
+  m_nh = nh;
+
   m_grid_map = m_grid_map_genertaor_ptr->m_grid_map;
   m_resolution = m_grid_map_genertaor_ptr->m_resolution;
   m_inv_resolution = 1.0 / m_resolution;
-  m_gl_xl = m_grid_map_genertaor_ptr->leftdown_offset_x;
-  m_gl_yl = m_grid_map_genertaor_ptr->leftdown_offset_y;
+  m_gl_xl = m_grid_map_genertaor_ptr->m_leftdown_offset_x;
+  m_gl_yl = m_grid_map_genertaor_ptr->m_leftdown_offset_y;
   m_gl_zl = 0.0;
   m_GLX_SIZE = m_grid_map_genertaor_ptr->m_length / m_resolution;
   m_GLY_SIZE = m_grid_map_genertaor_ptr->m_width / m_resolution;
   m_GLZ_SIZE = 1;
-
   initGridNodeMap();
+
+  start_end_point_vis_publisher =
+      m_nh.advertise<visualization_msgs::MarkerArray>("start_end_point", 1);
+  start_end_point_subscriber = m_nh.subscribe(
+      "/move_base_simple/goal", 1, &AstarSearcher::rcvPosCmdCallBack, this);
+  m_search_path_publisher =
+      nh.advertise<visualization_msgs::Marker>("search_path", 1);
+
+  path_search_timer = m_nh.createTimer(
+      ros::Duration(0.05),
+      boost::bind(&AstarSearcher::searchAndVisPathCB, this, _1));
+  path_search_timer.start();
 }
-void GridPathFinder::initGridNodeMap() {
+
+void AstarSearcher::initGridNodeMap() {
   GridNodeMap = new GridNodePtr **[m_GLX_SIZE];
   for (int i = 0; i < m_GLX_SIZE; i++) {
     GridNodeMap[i] = new GridNodePtr *[m_GLY_SIZE];
@@ -36,19 +157,20 @@ void GridPathFinder::initGridNodeMap() {
         Vector3d pos = gridIndex2coord(tmpIdx);
         GridNodeMap[i][j][k] = new GridNode(tmpIdx, pos);
         GridNodeMap[i][j][k]->occupancy =
-            m_grid_map_genertaor_ptr->getOccupancy(pos(0), pos(1));
+            m_grid_map_genertaor_ptr->getOccupancy(
+                pos(0), pos(1), m_grid_map_genertaor_ptr->m_layers);
       }
     }
   }
 }
 
-// void GridPathFinder::linkLocalMap(std::shared_ptr<grid_map::GridMap>
+// void AstarSearcher::linkLocalMap(std::shared_ptr<grid_map::GridMap>
 // local_map,
 //                                   Vector3d xyz_l) {
 //   Vector3d coord;
-//   for (int64_t i = 0; i < LX_SIZE; i++) {
-//     for (int64_t j = 0; j < LY_SIZE; j++) {
-//       for (int64_t k = 0; k < LZ_SIZE; k++) {
+//   for (int64_t i = 0; i < m_LX_SIZE; i++) {
+//     for (int64_t j = 0; j < m_LY_SIZE; j++) {
+//       for (int64_t k = 0; k < m_LZ_SIZE; k++) {
 //         coord(0) = xyz_l(0) + (double)(i + 0.5) * resolution;
 //         coord(1) = xyz_l(1) + (double)(j + 0.5) * resolution;
 //         coord(2) = xyz_l(2) + (double)(k + 0.5) * resolution;
@@ -68,7 +190,7 @@ void GridPathFinder::initGridNodeMap() {
 //   }
 // }
 
-void GridPathFinder::resetLocalMap() {
+void AstarSearcher::resetLocalMap() {
   // ROS_WARN("expandedNodes size : %d", expandedNodes.size());
   for (auto tmpPtr : expandedNodes) {
     tmpPtr->occupancy = 0; // forget the occupancy
@@ -91,7 +213,7 @@ void GridPathFinder::resetLocalMap() {
   // ROS_WARN("local map reset finish");
 }
 
-void GridPathFinder::resetGlobalMap() {
+void AstarSearcher::resetGlobalMap() {
   // ROS_WARN("expandedNodes size : %d", expandedNodes.size());
   for (auto tmpPtr : expandedNodes) {
     tmpPtr->occupancy = 0; // forget the occupancy
@@ -118,21 +240,22 @@ void GridPathFinder::resetGlobalMap() {
         Vector3i tmpIdx(i, j, k);
         Vector3d pos = gridIndex2coord(tmpIdx);
         GridNodeMap[i][j][k]->occupancy =
-            m_grid_map_genertaor_ptr->getOccupancy(pos(0), pos(1));
+            m_grid_map_genertaor_ptr->getOccupancy(
+                pos(0), pos(1), m_grid_map_genertaor_ptr->m_layers);
       }
     }
   }
 
   // ROS_WARN("local map reset finish");
 }
-GridNodePtr GridPathFinder::pos2gridNodePtr(Vector3d pos) {
+GridNodePtr AstarSearcher::pos2gridNodePtr(Vector3d pos) {
   Vector3i idx = coord2gridIndex(pos);
   GridNodePtr grid_ptr = new GridNode(idx, pos);
 
   return grid_ptr;
 }
 
-Vector3d GridPathFinder::gridIndex2coord(Vector3i index) {
+Vector3d AstarSearcher::gridIndex2coord(Vector3i index) {
   Vector3d pt;
   // cell_x_size_ * ((double)x_index + 0.5), cell_y_size_ * ((double)y_index +
   // 0.5), cell_z_size_ * ((double)z_index + 0.5)
@@ -147,7 +270,7 @@ Vector3d GridPathFinder::gridIndex2coord(Vector3i index) {
   return pt;
 }
 
-Vector3i GridPathFinder::coord2gridIndex(Vector3d pt) {
+Vector3i AstarSearcher::coord2gridIndex(Vector3d pt) {
   Vector3i idx;
   idx << min(max(int((pt(0) - m_gl_xl) * m_inv_resolution), 0), m_GLX_SIZE - 1),
       min(max(int((pt(1) - m_gl_yl) * m_inv_resolution), 0), m_GLY_SIZE - 1),
@@ -156,12 +279,12 @@ Vector3i GridPathFinder::coord2gridIndex(Vector3d pt) {
   return idx;
 }
 
-double GridPathFinder::getDiagHeu(GridNodePtr node1, GridNodePtr node2) {
+double AstarSearcher::getDiagHeu(GridNodePtr node1, GridNodePtr node2) {
   double dx = abs(node1->index(0) - node2->index(0));
   double dy = abs(node1->index(1) - node2->index(1));
   double dz = abs(node1->index(2) - node2->index(2));
 
-  double h;
+  double h = 0.0;
   int diag = min(min(dx, dy), dz);
   dx -= diag;
   dy -= diag;
@@ -179,7 +302,7 @@ double GridPathFinder::getDiagHeu(GridNodePtr node1, GridNodePtr node2) {
   return h;
 }
 
-double GridPathFinder::getManhHeu(GridNodePtr node1, GridNodePtr node2) {
+double AstarSearcher::getManhHeu(GridNodePtr node1, GridNodePtr node2) {
   double dx = abs(node1->index(0) - node2->index(0));
   double dy = abs(node1->index(1) - node2->index(1));
   double dz = abs(node1->index(2) - node2->index(2));
@@ -187,16 +310,16 @@ double GridPathFinder::getManhHeu(GridNodePtr node1, GridNodePtr node2) {
   return dx + dy + dz;
 }
 
-double GridPathFinder::getEuclHeu(GridNodePtr node1, GridNodePtr node2) {
+double AstarSearcher::getEuclHeu(GridNodePtr node1, GridNodePtr node2) {
   return (node2->index - node1->index).norm();
 }
 
-double GridPathFinder::getHeu(GridNodePtr node1, GridNodePtr node2) {
+double AstarSearcher::getHeu(GridNodePtr node1, GridNodePtr node2) {
   return m_tie_breaker * getDiagHeu(node1, node2);
   // return m_tie_breaker * getEuclHeu(node1, node2);
 }
 
-vector<GridNodePtr> GridPathFinder::retrievePath(GridNodePtr current) {
+vector<GridNodePtr> AstarSearcher::retrievePath(GridNodePtr current) {
   vector<GridNodePtr> path;
   path.push_back(current);
 
@@ -208,7 +331,7 @@ vector<GridNodePtr> GridPathFinder::retrievePath(GridNodePtr current) {
   return path;
 }
 
-vector<GridNodePtr> GridPathFinder::getVisitedNodes() {
+vector<GridNodePtr> AstarSearcher::getVisitedNodes() {
   vector<GridNodePtr> visited_nodes;
   for (int i = 0; i < m_GLX_SIZE; i++)
     for (int j = 0; j < m_GLY_SIZE; j++)
@@ -222,13 +345,13 @@ vector<GridNodePtr> GridPathFinder::getVisitedNodes() {
   return visited_nodes;
 }
 
-/*bool GridPathFinder::minClearance()
+/*bool AstarSearcher::minClearance()
 {
     neighborPtr->occupancy > 0.5
 }
 */
-void GridPathFinder::AstarSearch(Eigen::Vector3d start_pt,
-                                 Eigen::Vector3d end_pt) {
+void AstarSearcher::searchPath(Eigen::Vector3d start_pt,
+                               Eigen::Vector3d end_pt) {
   // ros::Time   = ros::Time::now();
   GridNodePtr startPtr = pos2gridNodePtr(start_pt);
   GridNodePtr endPtr = pos2gridNodePtr(end_pt);
@@ -334,7 +457,7 @@ void GridPathFinder::AstarSearch(Eigen::Vector3d start_pt,
   //          (time_2 - time_1).toSec());
 }
 
-vector<Vector3d> GridPathFinder::getPath() {
+vector<Vector3d> AstarSearcher::getPath() {
   vector<Vector3d> path;
 
   for (auto ptr : gridPath)
@@ -344,4 +467,9 @@ vector<Vector3d> GridPathFinder::getPath() {
   return path;
 }
 
-void GridPathFinder::resetPath() { gridPath.clear(); }
+void AstarSearcher::resetPath() { gridPath.clear(); }
+void AstarSearcher::searchAndVisPathCB(const ros::TimerEvent &e) {
+  resetGlobalMap();
+  searchPath(start_point, end_point);
+  displayPath();
+}
