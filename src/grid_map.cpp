@@ -222,24 +222,38 @@ void GridMapGenerator::generate_dynamic_object(const ros::TimerEvent &e) {
   ros::Time time1 = ros::Time::now();
   int total_steps = 1000;
   static int count = 0;
-  static grid_map::Position last_center(0.0, 0.0);
-  grid_map::Position cur_center;
-  cur_center.x() =
+  static grid_map::Position last_center1(0.0, 0.0);
+  grid_map::Position cur_center1;
+  cur_center1.x() =
       (double)count / (double)total_steps * m_length - m_length / 2;
-  cur_center.y() = -m_width / 4;
+  cur_center1.y() = -m_width / 4;
   double radius = 0.05 * m_length;
-  for (grid_map::CircleIterator iterator(m_grid_map, last_center, radius);
+  for (grid_map::CircleIterator iterator(m_grid_map, last_center1, radius);
        !iterator.isPastEnd(); ++iterator) {
     m_grid_map.at("dynamic_obstacle", *iterator) = 0.0;
   }
-  for (grid_map::CircleIterator iterator(m_grid_map, cur_center, radius);
+  for (grid_map::CircleIterator iterator(m_grid_map, cur_center1, radius);
+       !iterator.isPastEnd(); ++iterator) {
+    m_grid_map.at("dynamic_obstacle", *iterator) = 2.0;
+  }
+
+  static grid_map::Position last_center2(0.0, 0.0);
+  grid_map::Position cur_center2;
+  cur_center2.x() = -cur_center1.x();
+  cur_center2.y() = -cur_center1.y();
+  for (grid_map::CircleIterator iterator(m_grid_map, last_center2, radius);
+       !iterator.isPastEnd(); ++iterator) {
+    m_grid_map.at("dynamic_obstacle", *iterator) = 0.0;
+  }
+  for (grid_map::CircleIterator iterator(m_grid_map, cur_center2, radius);
        !iterator.isPastEnd(); ++iterator) {
     m_grid_map.at("dynamic_obstacle", *iterator) = 2.0;
   }
   count++;
   count = count % total_steps;
-  ros::Time time2 = ros::Time::now();
+  // ros::Time time2 = ros::Time::now();
   // std::cout << "count = " << count << " " << (time2 - time1).toSec()
   //           << std::endl;
-  last_center = cur_center;
+  last_center1 = cur_center1;
+  last_center2 = cur_center2;
 }
