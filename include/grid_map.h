@@ -27,6 +27,8 @@ public:
   grid_map::GridMap m_grid_map;
 
   double getOccupancy(double x, double y, std::vector<std::string> layer);
+  double getSwellOccupancy(double x, double y, std::vector<std::string>,
+                           double swell_dis = 0.3);
   void publishGridMap();
   void generate_dynamic_object(const ros::TimerEvent &e);
 

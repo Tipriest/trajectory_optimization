@@ -158,7 +158,7 @@ void AstarSearcher::initGridNodeMap() {
         Vector3d pos = gridIndex2coord(tmpIdx);
         GridNodeMap[i][j][k] = new GridNode(tmpIdx, pos);
         GridNodeMap[i][j][k]->occupancy =
-            m_grid_map_genertaor_ptr->getOccupancy(
+            m_grid_map_genertaor_ptr->getSwellOccupancy(
                 pos(0), pos(1), m_grid_map_genertaor_ptr->m_layers);
       }
     }
@@ -241,7 +241,7 @@ void AstarSearcher::resetGlobalMap() {
         Vector3i tmpIdx(i, j, k);
         Vector3d pos = gridIndex2coord(tmpIdx);
         GridNodeMap[i][j][k]->occupancy =
-            m_grid_map_genertaor_ptr->getOccupancy(
+            m_grid_map_genertaor_ptr->getSwellOccupancy(
                 pos(0), pos(1), m_grid_map_genertaor_ptr->m_layers);
       }
     }

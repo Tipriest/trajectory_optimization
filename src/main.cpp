@@ -1,8 +1,8 @@
 #include "backward.hpp"
+#include "corridor_generate.h"
 #include "grid_map.h"
 #include "traj_optimize3d.h"
 #include "traj_search3d.h"
-
 namespace backward {
 backward::SignalHandling sh;
 }
@@ -19,10 +19,14 @@ int main(int argc, char **argv) {
   std::shared_ptr<GridMapGenerator> grid_map_generator_ptr =
       std::make_shared<GridMapGenerator>(nh, global_map_ptr, global_map_layers);
 
-  AstarSearcher grid_path_finder(nh, grid_map_generator_ptr);
+  // AstarSearcher grid_path_finder();
   std::shared_ptr<AstarSearcher> grid_path_finder_ptr =
-      std::make_shared<AstarSearcher>(grid_path_finder);
+      std::make_shared<AstarSearcher>(nh, grid_map_generator_ptr);
 
+  CorridorGenerator corridor_generator(nh, grid_map_generator_ptr,
+                                       grid_path_finder_ptr);
+  std::shared_ptr<CorridorGenerator> corridor_generator_ptr =
+      std::make_shared<CorridorGenerator>(corridor_generator);
   ros::Rate rate(100);
   while (true) {
 

@@ -4,6 +4,7 @@ project(trajectory_optimization)
 set(CMAKE_BUILD_TYPE "Release")
 SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
 SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
+SET(CMAKE_CXX_STANDARD 17)
 message("!!!CMAKE_CXX_FLAGS is " ${CMAKE_CXX_FLAGS_DEBUG})
 set(Eigen3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
 set(ENV{MOSEKLM_LICENSE_FILE} "~/.mosek/mosek.lic")
@@ -20,6 +21,9 @@ find_package(catkin REQUIRED COMPONENTS
     grid_map_rviz_plugin
     grid_map_msgs
     tf
+    decomp_ros_utils
+    decomp_ros_msgs
+    decomp_util
 )
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED)
@@ -38,7 +42,7 @@ include_directories(
     third_party
     ${catkin_INCLUDE_DIRS}
     ${Eigen3_INCLUDE_DIRS}
-    # ${DECOMP_UTIL_INCLUDE_DIRS}
+    ${DECOMP_UTIL_INCLUDE_DIRS}
     ${PCL_INCLUDE_DIRS}
 )
 message("!!!catkin_INCLUDE_DIRS is  ${catkin_INCLUDE_DIRS}")
@@ -52,6 +56,7 @@ add_executable(trajectory_optimization
     src/bezier_base.cpp
     src/grid_map.cpp
     src/traj_search3d.cpp
+    src/corridor_generate.cpp
 )
 target_link_libraries(trajectory_optimization ${catkin_LIBRARIES} ${PCL_LIBRARIES} mosek64)
 

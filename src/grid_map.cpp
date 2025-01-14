@@ -217,6 +217,37 @@ double GridMapGenerator::getOccupancy(double x, double y,
   return 0;
 }
 
+double GridMapGenerator::getSwellOccupancy(double x, double y,
+                                           std::vector<std::string> layer,
+                                           double swell_dis) {
+
+  grid_map::InterpolationMethods interpolation_methods =
+      InterpolationMethods::INTER_LINEAR;
+  std::vector<std::pair<double, double>> dirs = {{-swell_dis, swell_dis},
+                                                 {-swell_dis, -swell_dis},
+                                                 {0.0, 0.0},
+                                                 {swell_dis, swell_dis},
+                                                 {swell_dis, -swell_dis}};
+  for (auto [dx, dy] : dirs) {
+    grid_map::Position position(x + dx, y + dy);
+    if (position.x() >= m_length / 2 + m_map_start_pos_x ||
+        position.x() <= -m_length / 2 + m_map_start_pos_x) {
+      continue;
+    } else if (position.y() >= m_width / 2 + m_map_start_pos_y ||
+               position.y() <= -m_width / 2 + m_map_start_pos_y) {
+      continue;
+    }
+    if (m_grid_map.atPosition("elevation", position, interpolation_methods) >
+            1.0 ||
+        m_grid_map.atPosition("dynamic_obstacle", position,
+                              interpolation_methods) > 1.0) {
+      return 1.0;
+    }
+  }
+
+  return 0;
+}
+
 void GridMapGenerator::generate_dynamic_object(const ros::TimerEvent &e) {
   // 10s走一次
   ros::Time time1 = ros::Time::now();
