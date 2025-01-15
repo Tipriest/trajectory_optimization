@@ -23,30 +23,38 @@ int main(int argc, char **argv) {
   std::shared_ptr<AstarSearcher> grid_path_finder_ptr =
       std::make_shared<AstarSearcher>(nh, grid_map_generator_ptr);
 
-  CorridorGenerator corridor_generator(nh, grid_map_generator_ptr,
-                                       grid_path_finder_ptr);
   std::shared_ptr<CorridorGenerator> corridor_generator_ptr =
-      std::make_shared<CorridorGenerator>(corridor_generator);
+      std::make_shared<CorridorGenerator>(nh, grid_map_generator_ptr,
+                                          grid_path_finder_ptr);
   ros::Rate rate(100);
-  while (true) {
+  // // 使用单线程
+  // while (true) {
 
-    // TrajOptimize3D testcase(nh);
-    // Eigen::Vector3d point1, point2, point3, point4, point5;
-    // std::vector<Eigen::Vector3d> waypoints = {Eigen::Vector3d(50, 50, 0), //
-    //                                           Eigen::Vector3d(100, 120, 0),
-    //                                           // Eigen::Vector3d(180, 150,
-    //                                           0), // Eigen::Vector3d(250, 80,
-    //                                           0),  // Eigen::Vector3d(280, 0,
-    //                                           0)};
-    // testcase.addWayPoints(waypoints);
-    // testcase.expandCubeFromWp();
-    // testcase.timeAllocation();
-    // Cube cube_print = testcase.m_cubes[0];
+  //   // TrajOptimize3D testcase(nh);
+  //   // Eigen::Vector3d point1, point2, point3, point4, point5;
+  //   // std::vector<Eigen::Vector3d> waypoints = {Eigen::Vector3d(50, 50, 0),
+  //   //
+  //   //                                           Eigen::Vector3d(100, 120,
+  //   0),
+  //   //                                           // Eigen::Vector3d(180, 150,
+  //   //                                           0), // Eigen::Vector3d(250,
+  //   80,
+  //   //                                           0),  // Eigen::Vector3d(280,
+  //   0,
+  //   //                                           0)};
+  //   // testcase.addWayPoints(waypoints);
+  //   // testcase.expandCubeFromWp();
+  //   // testcase.timeAllocation();
+  //   // Cube cube_print = testcase.m_cubes[0];
 
-    // testcase.solveTrajectory();
-    // testcase.vis(true, true, true);
-    ros::spinOnce();
-    rate.sleep();
-  }
+  //   // testcase.solveTrajectory();
+  //   // testcase.vis(true, true, true);
+  //   ros::spinOnce();
+  //   rate.sleep();
+  // }
+  ros::AsyncSpinner spinner(4);
+  spinner.start();
+  // 等待程序结束
+  ros::waitForShutdown();
   return 0;
 }

@@ -22,11 +22,11 @@ GridMapGenerator::GridMapGenerator(
   // 发布 GridMap
   m_map_publisher = nh_.advertise<grid_map_msgs::GridMap>("grid_map", 1);
   m_map_publish_timer =
-      nh_.createTimer(ros::Duration(0.01),
+      nh_.createTimer(ros::Duration(0.033),
                       boost::bind(&GridMapGenerator::mapPubTimerCB, this, _1));
   m_map_publish_timer.start();
   m_dynamic_object_timer = nh_.createTimer(
-      ros::Duration(0.01),
+      ros::Duration(0.02),
       boost::bind(&GridMapGenerator::generate_dynamic_object, this, _1));
   m_dynamic_object_timer.start();
 }
@@ -250,7 +250,6 @@ double GridMapGenerator::getSwellOccupancy(double x, double y,
 
 void GridMapGenerator::generate_dynamic_object(const ros::TimerEvent &e) {
   // 10s走一次
-  ros::Time time1 = ros::Time::now();
   int total_steps = 1000;
   static int count = 0;
   static grid_map::Position last_center1(0.0, 0.0);

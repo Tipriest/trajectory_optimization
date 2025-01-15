@@ -47,7 +47,6 @@ void TrajOptimize3D::solveTrajectory() {
   pos.row(0) = m_cubes[0].m_center;
   pos.row(1) = m_cubes[m_cubes.size() - 1].m_center;
   double obj;
-  ros::Time time_bef_opt = ros::Time::now();
 
   int generateRes = BezierPloyCoeffGeneration3D(
       m_cubes, m_MQM, pos, vel, acc, m_max_vel, m_max_acc, m_traj_order,
@@ -68,7 +67,6 @@ void TrajOptimize3D::solveTrajectory() {
   getBezierTraj();
   // visBezierTrajectory();
   // visTraj();
-  ros::Time time_aft_opt = ros::Time::now();
   // ROS_WARN("The objective of the program is %f", obj);
   // ROS_WARN("The time consumation of the program is %f",
   //          (time_aft_opt - time_bef_opt).toSec());
@@ -295,7 +293,6 @@ void TrajOptimize3D::visBezierTrajectory() {
 
   // 定义轨迹点
   geometry_msgs::Point traj_point;
-  int idx = 0;
   int segment_num = m_bezier_coeff.rows();
   for (int i = 0; i < segment_num; i++) {
     for (double t = 0.0; t < 1.0; t += 1.0 / m_seg_time(i), count += 1) {
