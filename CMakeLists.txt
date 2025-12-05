@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(trajectory_optimization)
 
-set(CMAKE_BUILD_TYPE "Release")
-SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
-SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
-SET(CMAKE_CXX_STANDARD 17)
+# set(CMAKE_BUILD_TYPE "Debug")
+set(CMAKE_BUILD_TYPE "RELEASE")
+set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
+set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -g -Wall")
+set(CMAKE_CXX_STANDARD 17)
 message("!!!CMAKE_CXX_FLAGS is " ${CMAKE_CXX_FLAGS_DEBUG})
 set(Eigen3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
 set(ENV{MOSEKLM_LICENSE_FILE} "~/.mosek/mosek.lic")
@@ -26,11 +27,11 @@ find_package(catkin REQUIRED COMPONENTS
     decomp_util
 )
 find_package(Eigen3 REQUIRED)
-find_package(PCL REQUIRED)
+# find_package(PCL REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS roscpp grid_map_core grid_map_ros grid_map_msgs geometry_msgs
+  CATKIN_DEPENDS roscpp grid_map_core grid_map_ros grid_map_msgs geometry_msgs grid_map_rviz_plugin
 )
 
 link_directories(${PROJECT_SOURCE_DIR}/third_party/mosek/lib/mosek8_1)
@@ -43,7 +44,7 @@ include_directories(
     ${catkin_INCLUDE_DIRS}
     ${Eigen3_INCLUDE_DIRS}
     ${DECOMP_UTIL_INCLUDE_DIRS}
-    ${PCL_INCLUDE_DIRS}
+    # ${PCL_INCLUDE_DIRS}
 )
 message("!!!catkin_INCLUDE_DIRS is  ${catkin_INCLUDE_DIRS}")
 
@@ -58,7 +59,11 @@ add_executable(trajectory_optimization
     src/traj_search3d.cpp
     src/corridor_generate.cpp
 )
-target_link_libraries(trajectory_optimization ${catkin_LIBRARIES} ${PCL_LIBRARIES} mosek64)
+target_link_libraries(trajectory_optimization 
+    ${catkin_LIBRARIES} 
+    # ${PCL_LIBRARIES} 
+    mosek64
+)
 
 add_executable(publish_point 
     rviz_plugins/sub_publishpoint.cpp)
