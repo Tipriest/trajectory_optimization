@@ -1,0 +1,6 @@
+[submodule "third_party/DecompROS"]
+	path = third_party/DecompROS
+	url = git@github.com:Tipriest/DecompROS.git
+[submodule "third_party/catkin_simple"]
+	path = third_party/catkin_simple
+	url = git@github.com:catkin/catkin_simple.git
