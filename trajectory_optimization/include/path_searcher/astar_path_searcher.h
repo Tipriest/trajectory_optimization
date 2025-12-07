@@ -1,49 +1,9 @@
 #pragma once
 
-#include "backward.hpp"
-#include "data_type.h"
-#include "grid_map.h"
+#include "base_path_searcher.h"
 
-#include "geometry_msgs/PoseStamped.h"
-#include "visualization_msgs/Marker.h"
-#include "visualization_msgs/MarkerArray.h"
 
-#include <Eigen/Dense>
-#include <Eigen/Eigen>
-
-#include <iostream>
-#include <ros/console.h>
-#include <ros/ros.h>
-
-class PathSearcher {
-public:
-  int m_GLX_SIZE, m_GLY_SIZE, m_GLZ_SIZE; //全局长度
-  int m_LX_SIZE, m_LY_SIZE, m_LZ_SIZE;    //局部长度
-  double m_resolution, m_inv_resolution;  //分辨率
-  double m_gl_xl, m_gl_yl, m_gl_zl;       //地图左下角位置偏置
-
-  ros::NodeHandle m_nh;
-  // TODO: 想要在这先Initialize一下这两个Eigen库的变量
-  ros::Subscriber start_end_point_subscriber; //接收开始点，结束点
-  ros::Publisher start_end_point_vis_publisher;
-
-  ros::Timer path_search_timer;
-
-  // 析构函数
-  virtual ~PathSearcher() { removeDisplayPath(); }
-
-  // 纯虚函数：搜索路径
-  virtual void searchPath(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt) = 0;
-
-  // 函数：显示路径
-  visualization_msgs::Marker m_path_vis;
-  ros::Publisher m_search_path_publisher;
-
-  virtual std::vector<Eigen::Vector3d> getPath() = 0;
-  void displayPath();
-  void removeDisplayPath();
-};
-class AstarSearcher : public PathSearcher {
+class AstarSearcher : public BasePathSearcher {
 private:
   Eigen::Vector3d gridIndex2coord(Eigen::Vector3i index);
   Eigen::Vector3i coord2gridIndex(Eigen::Vector3d pt);
