@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 2.8.12)
-project(trajectory_optimization)
+
+# CMP0048: project() command manages VERSION variables
+if(POLICY CMP0048)
+  cmake_policy(SET CMP0048 NEW)
+endif()
+
+project(trajectory_optimization VERSION 0.0.1)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 set(CMAKE_BUILD_TYPE "DEBUG")
@@ -109,6 +115,8 @@ catkin_package(
     INCLUDE_DIRS
         include
         ${EIGEN3_INCLUDE_DIRS}
+    LIBRARIES
+        base_path_searcher_lib
     CATKIN_DEPENDS
         roscpp
         visualization_msgs
@@ -131,6 +139,9 @@ include_directories(
 ## Declare a C++ library
 add_library(base_path_searcher_lib
     src/path_searcher/base_path_searcher.cpp
+    src/path_searcher/bfs_path_searcher.cpp
+    src/path_searcher/dfs_path_searcher.cpp
+    src/grid_map_interface.cpp
 )
 
 ## Link the library against catkin libraries
@@ -139,8 +150,6 @@ target_link_libraries(base_path_searcher_lib
 )
 
 ## Declare a C++ executable
-## With catkin_make all packages are built within a single CMake context
-## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node
     src/main.cpp
 )
@@ -157,8 +166,8 @@ add_executable(${PROJECT_NAME}_node
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
-  ${catkin_LIBRARIES}
-  base_path_searcher_lib
+    base_path_searcher_lib
+    ${catkin_LIBRARIES}
 )
 
 #############

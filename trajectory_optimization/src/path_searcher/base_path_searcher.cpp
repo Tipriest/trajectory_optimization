@@ -5,7 +5,7 @@ using namespace Eigen;
 
 BasePathSearcher::BasePathSearcher(const ros::NodeHandle &nh,
                                    const std::string &grid_map_topic)
-    : m_gridmap_interface(nh, grid_map_topic) {
+    : m_gridmap_interface(nh, grid_map_topic), m_nh(nh) {
   start_end_point_vis_publisher =
       m_nh.advertise<visualization_msgs::MarkerArray>("start_end_point", 1);
   start_end_point_subscriber = m_nh.subscribe(
@@ -45,6 +45,7 @@ void BasePathSearcher::displayPath() {
 
   _path_vis.id = 0;
   std::vector<Eigen::Vector3d> path = getPath();
+  std::cout << "path.size()=" << path.size() << std::endl;
   for (size_t i = 0; i < path.size(); i++) {
     geometry_msgs::Point point;
     point.x = path[i](0);
@@ -78,12 +79,12 @@ void BasePathSearcher::rcvPosCmdCallBack(
     start_temp(2) = cmd.pose.position.z;
     update_time++;
   } else if (update_time == 1) {
-    start_point(0) = start_temp(0);
-    start_point(1) = start_temp(1);
-    start_point(2) = start_temp(2);
-    end_point(0) = cmd.pose.position.x;
-    end_point(1) = cmd.pose.position.y;
-    end_point(2) = cmd.pose.position.z;
+    m_start_point(0) = start_temp(0);
+    m_start_point(1) = start_temp(1);
+    m_start_point(2) = start_temp(2);
+    m_end_point(0) = cmd.pose.position.x;
+    m_end_point(1) = cmd.pose.position.y;
+    m_end_point(2) = cmd.pose.position.z;
     update_time = 0;
 
     visualization_msgs::MarkerArray markerArray_vis;
@@ -111,9 +112,9 @@ void BasePathSearcher::rcvPosCmdCallBack(
     marker_vis.scale.y = 0.5;
     marker_vis.scale.z = 0.5;
     marker_vis.id = 0;
-    marker_vis.pose.position.x = start_point(0);
-    marker_vis.pose.position.y = start_point(1);
-    marker_vis.pose.position.z = start_point(2);
+    marker_vis.pose.position.x = m_start_point(0);
+    marker_vis.pose.position.y = m_start_point(1);
+    marker_vis.pose.position.z = m_start_point(2);
     markerArray_vis.markers.push_back(marker_vis);
 
     marker_vis.id = 1;
@@ -121,10 +122,24 @@ void BasePathSearcher::rcvPosCmdCallBack(
     marker_vis.color.r = 1.0;
     marker_vis.color.g = 0.0;
     marker_vis.color.b = 0.8;
-    marker_vis.pose.position.x = end_point(0);
-    marker_vis.pose.position.y = end_point(1);
-    marker_vis.pose.position.z = end_point(2);
+    marker_vis.pose.position.x = m_end_point(0);
+    marker_vis.pose.position.y = m_end_point(1);
+    marker_vis.pose.position.z = m_end_point(2);
     markerArray_vis.markers.push_back(marker_vis);
     start_end_point_vis_publisher.publish(markerArray_vis);
   }
+}
+
+void BasePathSearcher::searchAndVisPathCB(const ros::TimerEvent &) {
+  if (!m_gridmap_interface.hasReceivedGridMap()) {
+    return;
+  }
+  // 更新用于搜索的地图副本
+  search_map = m_gridmap_interface.getGridMapCopy();
+  // 让派生类把 search_map 转成它自己的数据结构
+  updateMapDataStructure();
+  // 让派生类根据 m_start_point / m_end_point 填充 m_path
+  searchPath();
+  // 基类统一可视化
+  displayPath();
 }

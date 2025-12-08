@@ -27,6 +27,7 @@ public:
 
   /// 执行一次处理并发布（也可以在回调中自动调用）
   void processAndPublish();
+  void publish();
 
 private:
   /// 订阅回调

@@ -43,7 +43,7 @@ void GridMapInterface::gridMapCallback(
 
   // 示例：在回调里直接做一次简单处理并发布
   // 你也可以选择外部周期性调用 processAndPublish()
-  processAndPublish();
+  // publish();
 }
 
 grid_map::GridMap GridMapInterface::getGridMapCopy() const {
@@ -155,6 +155,17 @@ void GridMapInterface::processAndPublish() {
   // geometry_msgs::Polygon poly;
   // ... 填充 poly ...
   // cropToPolygon(poly);
+
+  // 发布处理后的 grid map
+  grid_map_msgs::GridMap msg;
+  GridMapRosConverter::toMessage(grid_map_, msg);
+  map_publisher_.publish(msg);
+}
+
+void GridMapInterface::publish() {
+  std::lock_guard<std::mutex> lock(map_mutex_);
+  if (!has_received_gridmap_)
+    return;
 
   // 发布处理后的 grid map
   grid_map_msgs::GridMap msg;
