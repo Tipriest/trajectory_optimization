@@ -10,9 +10,7 @@
 </div>
 
 ## 一. 项目作用
-发布一个带有静态和动态障碍物的grid_map ros 消息用于路径搜索
-- [TODO]支持通过launch文件设置参数
-- 支持设置随机的静态和动态障碍
+根据库map_generator生成的grid_map，进行全局路径搜索，根据全局路径搜索的结果，生成凸包作为飞行走廊，根据飞行走廊的结果，作为MPC的约束，优化后面的MPC的轨迹
 
 
 ## 二. 环境安装
@@ -20,9 +18,12 @@
 
 ### 2.1 克隆带有子模块的仓库
 ```bash
+mkdir -p traj_optimization_ws/src && cd traj_optimization_ws
+git clone git@github.com:Tipriest/trajectory_optimization.git ./src/trajectory_optimization
+cd ./src/trajectory_optimization && git submodule update --init --recursive
+cd .. && git clone git@github.com:Tipriest/map_generator.git
+
 sudo apt install ros-noetic-grid-map
-mkdir -p catkin_ws/src 
-git clone git@github.com:Tipriest/map_generator.git ./catkin_ws/src
 ```
 
 ### 2.2 编译
@@ -33,5 +34,8 @@ catkin build
 
 ## 三. 仿真环境使用
 ```bash
-roslaunch map_generator optimize_visual.launch
+# 打开仿真地图
+roslaunch map_generator map_generator.launch
+roslaunch trajectory_optimization optimize_visual.launch
+
 ```
