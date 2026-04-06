@@ -2,12 +2,14 @@
 
 #include "../grid_map_interface.h"
 #include "geometry_msgs/PoseStamped.h"
+#include "nav_msgs/Odometry.h"
+#include "nav_msgs/Path.h"
 #include "visualization_msgs/Marker.h"
 #include "visualization_msgs/MarkerArray.h"
 #include <Eigen/Dense>
 #include <ros/ros.h>
-
-using namespace std;
+#include <string>
+#include <vector>
 
 class BasePathSearcher {
 public:
@@ -52,9 +54,35 @@ protected:
   // ROS相关
   ros::NodeHandle m_nh;
   ros::Subscriber start_end_point_subscriber; // 接收开始点，结束点
+  ros::Subscriber odom_subscriber;
   ros::Publisher start_end_point_vis_publisher;
   ros::Timer path_search_timer;
+  ros::Publisher m_search_path_vis_publisher;
   ros::Publisher m_search_path_publisher;
 
   void rcvPosCmdCallBack(const geometry_msgs::PoseStamped &cmd);
+  void rcvOdomCallBack(const nav_msgs::Odometry &odom);
+  void publishStartEndMarkers(bool include_goal);
+
+  std::string start_mode_ = "two_click";
+  std::string goal_topic_ = "/move_base_simple/goal";
+  std::string odom_topic_ = "/gazebo_odom";
+  std::string path_topic_ = "/tracking_path";
+  std::string marker_frame_id_ = "world";
+  double start_marker_r_ = 0.0;
+  double start_marker_g_ = 1.0;
+  double start_marker_b_ = 0.0;
+  double start_marker_a_ = 1.0;
+  double goal_marker_r_ = 1.0;
+  double goal_marker_g_ = 0.0;
+  double goal_marker_b_ = 0.8;
+  double goal_marker_a_ = 1.0;
+  double start_marker_scale_ = 0.5;
+  double goal_marker_scale_ = 0.5;
+  bool has_start_ = false;
+  bool has_goal_ = false;
+  bool has_odom_ = false;
+  Eigen::Vector3d odom_pos_{0.0, 0.0, 0.0};
+  Eigen::Vector3d start_temp_{0.0, 0.0, 0.0};
+  int update_time_ = 0;
 };

@@ -1,11 +1,6 @@
 <launch>
-  <!-- <node pkg="rviz"
-    type="rviz"
-    name="rviz"
-    output="screen"
-    args="-d $(find trajectory_optimization)/launch/test.rviz"/> -->
-  <node pkg="trajectory_optimization" type="trajectory_optimization" 
-        name="trajectory_optimization" output="screen" 
-        launch-prefix="xterm -e gdb -ex run --args ">
+  <rosparam command="load" file="$(find trajectory_optimization)/config/trajectory_optimization.yaml" ns="trajectory_optimization" />
+  <!-- <node pkg="rviz" type="rviz" name="rviz" output="screen" args="-d $(find trajectory_optimization)/launch/test.rviz"/> -->
+  <node pkg="trajectory_optimization" type="trajectory_optimization" name="trajectory_optimization" output="screen" launch-prefix="xterm -e gdb -ex run --args ">
   </node>
 </launch>

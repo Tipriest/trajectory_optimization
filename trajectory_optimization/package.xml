@@ -11,5 +11,6 @@
   <depend>roscpp</depend>
   <depend>visualization_msgs</depend>
   <depend>map_generator</depend>
+  <depend>nav_msgs</depend>
 
 </package>

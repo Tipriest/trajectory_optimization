@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
   ros::NodeHandle nh("~");
 
   std::string grid_map_topic = "/map_generator_node/grid_map";
-  std::string search_type = "dfs";
+  std::string search_type = "bfs";
   nh.param("search_type", search_type, search_type);
 
   std::shared_ptr<BasePathSearcher> path_searcher;

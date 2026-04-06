@@ -1,10 +1,12 @@
 <launch>
+  <rosparam command="load" file="$(find trajectory_optimization)/config/trajectory_optimization.yaml" ns="trajectory_optimization_node" />
   <!-- <group> -->
-    <!-- <node pkg="rviz"
-    type="rviz"
-    name="rviz"
-    output="screen"
-    args="-d $(find trajectory_optimization)/launch/test.rviz"/> -->
-    <node pkg="trajectory_optimization" type="trajectory_optimization_node" name="trajectory_optimization_node" output="screen" />
+  <!-- <node pkg="rviz" type="rviz" name="rviz" output="screen" args="-d $(find trajectory_optimization)/launch/test.rviz"/> -->
+  <node pkg="trajectory_optimization" type="trajectory_optimization_node" name="trajectory_optimization_node" output="screen">
+    <remap from="/map_generator_node/grid_map" to="/map_generator_node/grid_map" />
+    <!-- <remap from="odom" to="/gazebo_odom" /> -->
+    <remap from="/trajectory_optimization_node/search_path" to="/tracking_path" />
+    <!-- <remap from="optimized_path" to="/optimized_path" /> -->
+  </node>
   <!-- </group> -->
 </launch>

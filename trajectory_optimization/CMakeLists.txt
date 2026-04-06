@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp
     visualization_msgs
     map_generator
+    nav_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -121,6 +122,7 @@ catkin_package(
         roscpp
         visualization_msgs
         map_generator
+        nav_msgs
     # DEPENDS Eigen3
 )
 

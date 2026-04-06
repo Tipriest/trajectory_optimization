@@ -1,0 +1,18 @@
+search_type: "bfs"
+start_mode: "odom_plus_click" # two_click | odom_plus_click
+goal_topic: "/move_base_simple/goal"
+odom_topic: "/gazebo_odom"
+path_topic: "/tracking_path"
+
+# Marker appearance for start/end points
+marker_frame_id: "world"
+start_marker_r: 0.0
+start_marker_g: 1.0
+start_marker_b: 0.0
+start_marker_a: 1.0
+start_marker_scale: 0.5
+goal_marker_r: 1.0
+goal_marker_g: 0.0
+goal_marker_b: 0.8
+goal_marker_a: 1.0
+goal_marker_scale: 0.5
